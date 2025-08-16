@@ -73,6 +73,18 @@ button:hover { transform:translateY(-2px); box-shadow:0 0 10px var(--highlight);
 table { width:100%; border-collapse:collapse; margin-top:15px; font-size:14px; }
 th, td { padding:10px; border-bottom:1px solid rgba(255,255,255,0.2); text-align:left; }
 th { color:#d9d9d9; font-weight:600; }
+
+#entriesCount {
+  color:var(--muted);
+  margin-bottom:10px;
+  font-size:14px;
+  font-weight:600;
+  transition: all 0.3s ease;
+}
+#entriesCount.glow {
+  color:#fff;
+  text-shadow:0 0 10px var(--sx-blue),0 0 20px var(--sx-purple);
+}
 </style>
 </head>
 <body>
@@ -96,6 +108,7 @@ th { color:#d9d9d9; font-weight:600; }
 
   <div class="card">
     <h2>Entries</h2>
+    <p id="entriesCount">Total Entries: 0</p>
     <table>
       <thead>
         <tr><th>Name</th><th>Time</th></tr>
@@ -123,16 +136,41 @@ function loadEntries() {
   return JSON.parse(localStorage.getItem('entries')||'[]');
 }
 
-// Render entries table
+// Animate counter
+function animateCounter(id, start, end, duration) {
+  const obj = document.getElementById(id);
+  let startTimestamp = null;
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    obj.textContent = "Total Entries: " + Math.floor(progress * (end - start) + start);
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+  window.requestAnimationFrame(step);
+
+  // Glow effect
+  obj.classList.add("glow");
+  setTimeout(()=>obj.classList.remove("glow"),800);
+}
+
+// Render entries table + animated counter
 function renderEntries() {
   const tbody = document.getElementById('entriesTable');
   const entries = loadEntries();
   tbody.innerHTML = "";
+
   for(const e of entries) {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${e.name}</td><td>${e.time}</td>`;
     tbody.appendChild(tr);
   }
+
+  // Animate counter
+  const counterEl = document.getElementById('entriesCount');
+  const currentCount = parseInt(counterEl.textContent.replace(/\D/g,'')) || 0;
+  animateCounter('entriesCount', currentCount, entries.length, 600);
 }
 
 // Add entry to localStorage
@@ -186,4 +224,4 @@ renderEntries();
 </script>
 
 </body>
-        </html>
+  </html>
